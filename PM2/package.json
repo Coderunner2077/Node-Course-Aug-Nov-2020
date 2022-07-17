@@ -1,0 +1,6 @@
+{
+	"name": "myApp",
+	"version": "0.1.0",
+	"author": "Me",
+	"description": "Testing PM2 process manager"
+}

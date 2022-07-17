@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+        <head>
+                <meta charset="utf-8">
+                <title>Compteur</title>
+        </head>
+        <body>
+		<h3>Bienvenue. Attention je vais compter jusqu'à <%= compteur %></h3>
+
+		<p> <% for(let i = 0; i < compteur; i++) { %>
+				<span><%= i %>... </span>
+		    <% } %>
+		</p>
+		<h4>Tant que j'y suis, voici un des trois noms choisis au hasard: 
+			<%= names[Math.floor(Math.random() * names.length)] %>
+		</h4>
+        </body>
+</html>
+
+

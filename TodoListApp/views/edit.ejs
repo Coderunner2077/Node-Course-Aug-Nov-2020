@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Edit todo element</title>
+		<style> 
+			.container {
+				width: 500px;
+				margin: auto;
+				text-align: center;
+			}
+
+			.container ul.todoList {
+				text-align: left;
+				margin-bottom: 20px;
+				margin-left: 70px;
+				font-size: 1.2em;
+			}
+
+			.checkList {
+				width: 20px;
+				height: 20px;
+				position: relative;
+				top: 4px;
+			}
+
+			.edit {
+				width: 25px;
+				height: 18px;
+				position: relative;
+				top: 4px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h2>Ma todolist</h2>
+				<ul class="todoList">
+					<% for(let i = 0; i < todos.length; i++) { %>
+					<li>
+						<a href="/remove/<%= i %>"><img src="/img/cross.png" alt="remove" class="checkList" /></a>
+						<%= todos[i] %>
+						<% if(i != todonum) { %>
+							<a href="/edit/<%= i %>">
+								<img src="/img/edit.png" alt="edit" class="edit" />
+							</a>
+						<% } %>
+					</li>
+					<% } %>
+				</ul>
+			<form method="post" action="/edit">
+				<label for="todo">Que dois-je faire ?</label>
+				<input name="todo" id="todo" type="text" autofocus value="<%= todo %>"
+					onfocus="this.selectionStart=this.selectionEnd=this.value.length" />
+				<input name="todonum" type="hidden" value="<%= todonum %>" />
+				<input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+				<input type="submit" value="Modifier" />
+			</form>
+		</div>
+	</body>
+</html>

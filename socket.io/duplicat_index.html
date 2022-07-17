@@ -1,0 +1,90 @@
+<!DOCYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+		<title>Introduction à Socket.io</title>
+		<style>
+			.container {
+				border: 5px solid black;
+				width: 500px;
+				height: 300px;
+				display: flex;
+				justify-content: space-between;
+				flex-direction: column;
+			}
+
+			.online {
+				height: 20px;
+				font-size: 1.2em;
+				background-color: #ccc;
+			}
+
+			#inquire {
+				background-color: #0000ee;
+				border: 3px solid #ccc;
+				border-radius: 7px;
+				margin: 20px;
+				font-weight: bold;
+				font-size: 1.2em;
+				color: white;
+				padding: 3px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1>Communication avec socket.io</h1>
+
+		<div class="container">
+			<div>
+				<div class="online" id="online"></div>
+				<ul id="room"></ul>
+			</div>
+			<div>
+				<button id="inquire">Voir qui sont en ligne</button>
+			</div>
+		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+		<script>
+			const updateOnline = message => {
+				const online = document.getElementById('online');
+				online.innerHTML = message;
+			}
+
+			const writeInRoom = message => {
+				const room = document.getElementById('room');
+				room.innerHTML += `<li>${message}</li>`;
+			}
+
+			const socket = io.connect('http://localhost:8080');
+
+			socket.on('connected', ({content, online}) => {
+				updateOnline(content + ' ' + online);
+			});
+
+			const pseudo = prompt('Entrez votre pseudo');
+			socket.emit('petit_nouveau', pseudo);
+
+			socket.on('welcome', message => {
+				writeInRoom(message);
+			});
+
+			socket.on('enters_room', message => {
+				writeInRoom(message);
+			});
+
+			socket.on('exits_room', ({message, online}) => {
+				writeInRoom(message);
+				updateOnline('Online: ' + online);
+			});
+
+			document.getElementById('inquire').addEventListener('click', e => {
+				socket.emit('inquire', pseudo);
+			});
+
+			socket.on('answer_inquiry', names => {
+				updateOnline('Online: ' + names.join(', '));
+			})
+		</script>
+	</body>

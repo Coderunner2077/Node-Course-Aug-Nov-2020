@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Todo list</title>
+		<style> 
+			.container {
+				width: 500px;
+				margin: auto;
+				text-align: center;
+			}
+
+			.container ul.todoList {
+				text-align: left;
+				margin-bottom: 20px;
+				margin-left: 70px;
+				font-size: 1.2em;
+			}
+
+			.checkList {
+				width: 20px;
+				height: 20px;
+				position: relative;
+				top: 4px;
+			}
+
+			.edit {
+				width: 25px;
+				height: 18px;
+				position: relative;
+				top: 4px;
+			}
+			.up-down {
+				width: 20px;
+				
+				position: relative;
+				
+			}
+			.editor.hidden {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h2>Ma todolist</h2>
+				<ul class="todoList">
+					<% for(let i = 0; i < todos.length; i++) { %>
+					<li data-index="<%= i %>">
+						<a href="#" class="remove"><img src="/img/cross.png" alt="remove" class="checkList" /></a>
+						<% if(i > 0) { %>
+							<a href="#" class="up"><img src="/img/up.png" alt="up" class="up-down" /></a>
+						<% } %>
+						<% if(i < (todos.length - 1)) { %>
+							<a href="#" class="down"><img src="/img/down.png" alt="down" class="up-down" /></a>
+						<% } %>
+						<span class="todo"><%= todos[i] %></span>
+						<a href="#" class="editor">
+							<img src="/img/edit.png" alt="edit" class="edit" />
+						</a>
+					</li>
+					<% } %>
+				</ul>
+			<form method="post" action="/add" id="todoForm">
+				<label for="todo">Que dois-je faire ?</label>
+				<input name="todo" id="todo" type="text" autofocus 
+					onfocus="this.selectionStart=this.selectionEnd=this.value.length" />
+				<input type="submit" value="Valider" />
+			</form>
+		</div>
+
+		<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+		<script>
+			const socket = io.connect('http://localhost:8080');
+
+			var pseudo = '';
+			
+			setTimeout(() => {
+				do {
+					if(pseudo === '')
+						pseudo = prompt('Veuillez entrer votre pseudo')
+					else
+						pseudo = prompt('Veuillez entrer un pseudo d\'au moins deux caractères');
+					if(/^\w{2,}/.test(pseudo))
+						socket.emit('pseudo_entered', pseudo);
+				} while (/^\w{2,}/.test(pseudo) === false);
+				
+			}, 1500);
+			
+			const todoapp = {
+				socket: socket,
+				todoapp: this,
+				buildTodo: (todo, length, index) => {
+					let todoElem = document.createElement('li');
+					if(index === undefined) 
+						index = length;
+						
+					let todoHTML = `<li data-index="${index}">
+						<a href="#" class="remove"><img src="/img/cross.png" alt="remove" class="checkList" /></a>
+						${index > 0 ? `<a href="#" class="up"><img src="/img/up.png" alt="up" class="up-down" /></a>` : ''}
+						${index < length - 1 ? `<a href="#" class="down"><img src="/img/down.png" alt="down" class="up-down" /></a>` : ''}
+						<span class="todo">${todo}</span>
+						<a href="#" class="editor">
+							<img src="/img/edit.png" alt="edit" class="edit" />
+						</a>
+					</li>`;
+					todoElem.innerHTML = todoHTML;
+					return todoElem;
+				},
+				buildTodos: (todos) => {
+					let todoList = document.querySelector('.todoList');
+					let newList = document.createElement('ul');
+					let length = todos.length;
+					newList.classList.add('todoList');
+					for(let i = 0; i < todos.length; i++) {
+						newList.appendChild(todoapp.buildTodo(todos[i], length, i))
+					}
+					todoList.replaceWith(newList);
+					todoapp.addEventListeners();
+				},
+				addTodo: (todo) => {
+					if(/\w+/.test(todo)) {
+						socket.emit('add', todo);
+					}
+				},
+				editTodo: (index, todo) => {
+					if(/\w+/.test(todo)) {
+						socket.emit('edit', index, todo);
+					}
+				},
+				addEventListeners: () => {
+					let removers = document.querySelectorAll('.remove');
+					removers.forEach((link, index) => {
+						link.addEventListener('click', e => {
+							socket.emit('remove', index);
+						})
+					});
+					let moveUps = Array.from(document.querySelectorAll('.up'));
+					moveUps.forEach((link, index) => {
+						link.addEventListener('click', e => {
+							let parentLi = link.parentNode;
+							socket.emit('up', parseInt(parentLi.getAttribute('data-index'), 10));
+						})
+					});
+					let moveDowns = document.querySelectorAll('.down');
+					moveDowns.forEach((link, index) => {
+						link.addEventListener('click', e => {
+							socket.emit('down', index);
+						})
+					});
+					let editors = document.querySelectorAll('.editor');
+					editors.forEach((link, index) => {
+						link.addEventListener('click', e => {
+							let hidden = document.querySelector('.hidden');
+							if(hidden)
+								hidden.classList.remove('hidden')
+							let todo = document.querySelector('#todo');
+							todo.value = link.previousElementSibling.innerHTML;
+							todo.setAttribute('data-index', index);
+							link.classList.add('hidden');
+							todo.focus();
+						})
+					});
+
+				}
+			}
+			todoapp.addEventListeners();
+
+			const form = document.querySelector('#todoForm');
+
+			form.addEventListener('submit', e => {
+				e.preventDefault();
+				let todo = document.querySelector('#todo');
+				let index = todo.getAttribute('data-index');
+				if(index != null && index != undefined)
+					todoapp.editTodo(parseInt(index, 10), todo.value)
+				else
+					todoapp.addTodo(todo.value);
+				todo.value = '';
+				todo.removeAttribute('data-index');
+			})
+
+			socket.on('update', todos => {
+				todoapp.buildTodos(todos);
+			})
+		</script>
+	</body>
+</html>
