@@ -10,7 +10,7 @@
     "type": "git",
     "url": "backend"
   },
-  "author": "TyranCreates",
+  "author": "Guillaume Coderunner <coderunner2077@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.0",
